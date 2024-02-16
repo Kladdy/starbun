@@ -1,0 +1,82 @@
+claddings:
+- density: 7.0
+  id: cladding1
+  inner_radius: 0.35
+  nuclides:
+  - nuclide_str: Zr90
+    percent: 100.0
+    percent_type: wo
+  outer_radius: 0.45
+  temperature: 1000.0
+fuels:
+- ba: 1.0
+  density: 10.0
+  enrichment: 5.0
+  id: fuel1
+  inner_radius: 0
+  nuclides:
+  - nuclide_str: U235
+    percent: 3.0
+    percent_type: wo
+  - nuclide_str: U238
+    percent: 97.0
+    percent_type: wo
+  outer_radius: 0.3
+  temperature: 1000.0
+gaps:
+- density: 5.0
+  id: gap1
+  inner_radius: 0.3
+  nuclides:
+  - nuclide_str: He4
+    percent: 100.0
+    percent_type: wo
+  outer_radius: 0.35
+  temperature: 1000.0
+lattice_pitch: 1.0
+lattice_size: 3
+moderators:
+- density: 1.0
+  id: moderator1
+  nuclides:
+  - nuclide_str: H1
+    percent: 2
+    percent_type: ao
+  - nuclide_str: O16
+    percent: 1
+    percent_type: ao
+  temperature: 1000.0
+name: fuel
+segments:
+- cladding_rods:
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  - cladding1
+  fuel_rods:
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  - fuel1
+  gap_rods:
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  - gap1
+  height: 1.0
+  id: segment1
