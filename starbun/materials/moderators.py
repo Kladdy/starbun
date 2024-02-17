@@ -21,5 +21,6 @@ def water(boron_ppm=0.0, temperature=300.0, pressure=0.1013):
   """
 
   moderator = openmc.model.borated_water(boron_ppm, temperature, pressure)
+  moderator.name = "water"
 
   return moderator

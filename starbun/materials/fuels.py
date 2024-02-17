@@ -30,7 +30,7 @@ def uo2(density=10.0, temperature=900.0, enrichment_pct=5.0, gd2o3_pct=0.0):
   if gd2o3_pct > 0.0:
     ba = gd2o3(density, temperature)
     gd2o3_frac = gd2o3_pct/100
-    fuel = fuel.mix_materials(ba, [1 - gd2o3_frac, gd2o3_frac], 'wo')
+    fuel = openmc.Material.mix_materials([fuel, ba], [1 - gd2o3_frac, gd2o3_frac], 'wo')
     fuel.name = "uo2_gd2o3"
 
   return fuel
