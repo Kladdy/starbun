@@ -1,17 +1,18 @@
 import openmc
 import openmc.data
+import openmc.model
 
-def water(temperature=300.0, pressure=0.1013, use_TSL=True):
+def water(boron_ppm=0.0, temperature=300.0, pressure=0.1013):
   """Create a water moderator material
   
   Parameters
   ----------
+  boron_ppm : float
+    Boron concentration in ppm
   temperature : float
     Temperature in K
   pressure : float
     Pressure in MPa
-  use_TSL : bool
-    Whether to use the thermal scattering library
     
   Returns
   -------
@@ -19,15 +20,6 @@ def water(temperature=300.0, pressure=0.1013, use_TSL=True):
     The water moderator material
   """
 
-  density = openmc.data.water_density(temperature, pressure)
-
-  moderator = openmc.Material(name="water")
-  moderator.add_element('H', 2)
-  moderator.add_element('O', 1)
-
-  moderator.set_density('g/cm3', density)
-  moderator.temperature = temperature
-
-  if use_TSL: moderator.add_s_alpha_beta('c_H_in_H2O')
+  moderator = openmc.model.borated_water(boron_ppm, temperature, pressure)
 
   return moderator
