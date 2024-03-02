@@ -58,11 +58,11 @@ def get(n_ba_pins: int, lattice_size: int):
 
   return all_ba_pin_positions
   
-def visualize(lattice_size: int):
+def visualize(lattice_size: int, path: str):
   import matplotlib.pyplot as plt
   import numpy as np
   import os
-  os.makedirs('img', exist_ok=True)
+  os.makedirs(path, exist_ok=True)
   for n_ba_pins in [0, 4, 8, 12, 16]:
     ba_pin_positions = get(n_ba_pins, lattice_size)
     lattice = np.zeros((lattice_size, lattice_size))
@@ -70,5 +70,5 @@ def visualize(lattice_size: int):
       lattice[x, y] = 1
     plt.imshow(lattice, cmap='gray')
     plt.title(f'{n_ba_pins} BA pins, {lattice_size}x{lattice_size} lattice')
-    plt.savefig(f'img/{lattice_size}x{lattice_size}_ba-pin-positions_{n_ba_pins}-pins.png')
+    plt.savefig(f'{path}/{lattice_size}x{lattice_size}_ba-pin-positions_{n_ba_pins}-pins.png')
   plt.close() 
