@@ -1,11 +1,13 @@
 import os
 from dataclasses import dataclass, field
-from dataclass_wizard import YAMLWizard
+from dataclass_wizard import DumpMeta, LoadMeta, YAMLWizard
 import starbun.utils.tracker
+import logging
 
 @dataclass
 class ExperimentInputData(YAMLWizard, key_transform='SNAKE'):
   experiment: str
+  experiment_path: str
   original_cwd_path: str
   cwd_path: str
   results_path: str
@@ -19,19 +21,12 @@ class ExperimentInputData(YAMLWizard, key_transform='SNAKE'):
 
     if not is_existing_experiment: self.experiment = starbun.utils.tracker.get_tracker_value(increase=True)
     self.original_cwd_path = os.getcwd()
-    self.cwd_path = self.get_cwd_path()
-    self.results_path = self.get_results_path()
-    self.img_path = self.get_img_path()
+    self.experiment_path = os.path.join("experiments", self.experiment)
+    self.cwd_path = os.path.join(self.experiment_path, "cwd")
+    self.results_path = os.path.join(self.experiment_path, "results")
+    self.img_path = os.path.join(self.experiment_path, "img")
 
+    os.makedirs(self.experiment_path, exist_ok=is_existing_experiment)
     os.makedirs(self.cwd_path, exist_ok=is_existing_experiment)
     os.makedirs(self.results_path, exist_ok=is_existing_experiment)
     os.makedirs(self.img_path, exist_ok=is_existing_experiment)
-
-  def get_cwd_path(self):
-    return os.path.join("experiments", self.experiment, "cwd")
-
-  def get_results_path(self):
-    return os.path.join("experiments", self.experiment, "results")
-
-  def get_img_path(self):
-    return os.path.join("experiments", self.experiment, "img")

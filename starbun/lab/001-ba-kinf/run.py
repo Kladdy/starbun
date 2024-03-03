@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from dataclasses import dataclass, field
-from dataclass_wizard import YAMLWizard
+from dataclass_wizard import DumpMeta, YAMLWizard
 from typing import ClassVar
 import openmc
 import openmc.stats
@@ -19,8 +19,7 @@ import ba_pin_positions
 from starbun.utils.input_data import ExperimentInputData
 
 @dataclass
-class InputData(ExperimentInputData, YAMLWizard, key_transform='SNAKE'):
-
+class InputData(ExperimentInputData):
   enrichment_pct: float = 5.0
   lattice_pitch: float = 1.26
   fuel_or: float = 0.45
@@ -36,10 +35,17 @@ class InputData(ExperimentInputData, YAMLWizard, key_transform='SNAKE'):
   inactive_batches: int = 40
   chain_file: str = os.environ['OPENMC_DEPLETION_CHAIN']
   cross_sections: str = os.environ['OPENMC_CROSS_SECTIONS']
+  test: str = "test"
 
   def __init__(self, experiment=None, *args, **kwargs):
     self.experiment = experiment
-    ExperimentInputData.__init__(self)
+
+    # Check if kwargs is an empty dictionary
+    if kwargs:
+      for key, value in kwargs.items():
+        setattr(self, key, value)
+
+    super().__init__()
 
 def plot_geometry(inp: InputData, universe: openmc.Universe, colors: dict):  
   # Increase font size for better visibility with large pixel counts
@@ -92,40 +98,57 @@ def run_depletion(inp: InputData, model: openmc.model.Model):
   cecm.integrate()
   os.chdir(inp.original_cwd_path)
 
-def get_results(inp: InputData):
+def get_results(inp: InputData, output_path: str = None):
+  if output_path is None:
+    output_path = inp.results_path
+  
   results = openmc.deplete.Results(f'{inp.cwd_path}/depletion_results.h5')
+
+  # Get the runtime by adding all the time steps from the statepoints
+  runtimes = [openmc.StatePoint(filepath=f'{inp.cwd_path}/openmc_simulation_n{i}.h5', autolink=False).runtime["total"] for i in range(1, len(inp.dt) + 1)]
+  runtime = sum(runtimes)
+  label = f"Chain: {inp.chain_file.split('/')[-1]}\nRuntime: {runtime:.0f} s"
+  print(f"Depletion chain: {inp.chain_file.split('/')[-1]}, runtime: {runtime:.0f} s")
 
   # Plot the depletion
   time, k = results.get_keff(time_units="d")
-  plt.errorbar(time, k[:, 0], yerr=k[:, 1], fmt='o-')
+  plt.figure(0)
+  plt.errorbar(time, k[:, 0], yerr=k[:, 1], fmt='o-', label=label)
   plt.xlabel('$t$ [d]')
   plt.ylabel('$k_{\infty}$')
   plt.grid()
+  plt.legend()
   plt.tight_layout()
-  plt.savefig(f'{inp.results_path}/keff.png')
-
-  # Save the input data as a yaml file
-  inp.to_yaml_file(f'{inp.results_path}/input_data.yaml')
+  plt.savefig(f'{output_path}/keff.png')
 
 def main():
-  argparser = argparse.ArgumentParser() # Add argument to specity experiment numbers to get results on, e.g. 1, 2, 7, 928. Could be a list of numbers or a range
+  argparser = argparse.ArgumentParser() # Add argument to specity experiment numbers to get results on, e.g. 1, 2, 7, 928. Given as a space-separated list of numbers
   argparser.add_argument("-e", "--experiment_numbers", help="Experiment numbers to get results on, e.g. 1, 2, 7, 928", type=int, nargs='+')
   args = argparser.parse_args()
-  experiment_numbers = args.experiment_numbers
+  experiment_numbers : list[str] = args.experiment_numbers
 
   if experiment_numbers is not None:
     print(f"Getting results for experiments: {experiment_numbers}")
+    if len(experiment_numbers) == 1:
+      output_path = None # If only one experiment number is given, the results will be saved in the experiment's results folder
+    else:
+      output_path = os.path.join("combined", "_".join([str(experiment_number) for experiment_number in experiment_numbers]))
+      os.makedirs(output_path, exist_ok=True)
+
     for experiment_number in experiment_numbers:
       inp = InputData(experiment=starbun.utils.tracker.format_tracker_value(experiment_number))
-      inp.from_yaml_file(f'experiments/{inp.experiment}/results/input_data.yaml')
-      get_results(inp)
+      loaded_inp = InputData.from_yaml_file(f'{inp.experiment_path}/input_data.yaml')
+      get_results(loaded_inp, output_path)
     return # Exit the program after getting results
 
-  for depletion_chain in [os.environ['OPENMC_DEPLETION_CHAIN'], "/Users/sigge/nuclear_data/hdf5/Simplified chain/chain_casl_pwr.xml"]:
+  for depletion_chain in ["/Users/sigge/nuclear_data/hdf5/endfb-vii.1-hdf5/chain_endfb71_pwr.xml", "/Users/sigge/nuclear_data/hdf5/Simplified chain/chain_casl_pwr.xml"]:
     inp = InputData()
     inp.chain_file = depletion_chain
 
-    ba_pin_positions.visualize(inp.lattice_size, inp.img_path)
+    # Save the input data as a yaml file
+    inp.to_yaml_file(f'{inp.experiment_path}/input_data.yaml')
+
+    #ba_pin_positions.visualize(inp.lattice_size, inp.img_path)
 
     geometry = get_geometry(inp)
     settings = get_settings(inp)
