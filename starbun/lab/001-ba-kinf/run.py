@@ -26,7 +26,7 @@ class InputData(ExperimentInputData):
   clad_ir: float = 0.47
   clad_or: float = 0.55
   lattice_size: int = 10
-  dt: ClassVar[list[int]] = [2 * 24 * 60 * 60] * 20 + [100 * 24 * 60 * 60] * 20
+  dt: ClassVar[list[int]] = [3 * 24 * 60 * 60] * 5 + [200 * 24 * 60 * 60] * 10
   power: float = 4e6 / 400
   n_ba_pins: int = 12
   ba_pct: float = 5.0
@@ -35,7 +35,6 @@ class InputData(ExperimentInputData):
   inactive_batches: int = 40
   chain_file: str = os.environ['OPENMC_DEPLETION_CHAIN']
   cross_sections: str = os.environ['OPENMC_CROSS_SECTIONS']
-  test: str = "test"
 
   def __init__(self, experiment=None, *args, **kwargs):
     self.experiment = experiment
@@ -116,7 +115,7 @@ def get_results(inp: InputData, output_path: str = None):
   plt.errorbar(time, k[:, 0], yerr=k[:, 1], fmt='o-', label=label)
   plt.xlabel('$t$ [d]')
   plt.ylabel('$k_{\infty}$')
-  plt.grid()
+  plt.grid(visible=True)
   plt.legend()
   plt.tight_layout()
   plt.savefig(f'{output_path}/keff.png')
@@ -140,10 +139,8 @@ def main():
       loaded_inp = InputData.from_yaml_file(f'{inp.experiment_path}/input_data.yaml')
       get_results(loaded_inp, output_path)
     return # Exit the program after getting results
-
-  for depletion_chain in ["/Users/sigge/nuclear_data/hdf5/endfb-vii.1-hdf5/chain_endfb71_pwr.xml", "/Users/sigge/nuclear_data/hdf5/Simplified chain/chain_casl_pwr.xml"]:
+  else:
     inp = InputData()
-    inp.chain_file = depletion_chain
 
     # Save the input data as a yaml file
     inp.to_yaml_file(f'{inp.experiment_path}/input_data.yaml')
